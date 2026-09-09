@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="AttaLambda is a small language built on pure, untyped lambda calculus, with readable syntax, exact rational numbers, and runtime type checks.">
+  <title>AttaLambda — A small language built on lambda calculus</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <a class="wordmark" href="index.html">AttaLambda</a>
+    <nav aria-label="Main navigation">
+      <a href="index.html" aria-current="page">Home</a> <span aria-hidden="true">·</span>
+      <a href="language.html">Language</a> <span aria-hidden="true">·</span>
+      <a href="examples.html">Examples</a> <span aria-hidden="true">·</span>
+      <a href="get-started.html">Get started</a> <span aria-hidden="true">·</span>
+      <a href="https://github.com/kserrec/attalambda">GitHub</a>
+    </nav>
+  </header>
+  <main>
+    <h1>A small language built on lambda calculus</h1>
+    <p>AttaLambda is a small language built on pure, untyped lambda calculus.</p>
+    <p>Its ordinary computation is built from unary functions and application.
+      It adds readable syntax, exact rational numbers, and runtime type checks.
+      Input and output cross a separate host boundary.</p>
+
+    <pre tabindex="0" aria-label="A complete AttaLambda program"><code>#lang attalambda
+
+(def square x = (mult x x))
+
+(print (map square (list 1 2 3 4)))</code></pre>
+    <p class="output-label">Output (no trailing newline)</p>
+    <pre tabindex="0" aria-label="Program output"><code>[1, 4, 9, 16]</code></pre>
+
+    <p><a href="language.html">Explore the language</a>,
+      <a href="examples.html">see examples</a>, or
+      <a href="get-started.html">get started</a>.</p>
+  </main>
+  <footer>
+    <p>AttaLambda is open source under the
+      <a href="https://github.com/kserrec/attalambda/blob/v0.7.0/LICENSE">Apache License 2.0</a>.
+      This website uses the <a href="LICENSE">same license</a>.</p>
+  </footer>
+</body>
+</html>
