@@ -26,7 +26,8 @@ a:visited {
 }
 
 a:focus-visible,
-pre:focus-visible {
+pre:focus-visible,
+summary:focus-visible {
   outline: 2px solid #a71920;
   outline-offset: 4px;
 }
@@ -44,7 +45,7 @@ nav {
   margin-top: 1rem;
 }
 
-nav a {
+header nav a {
   white-space: nowrap;
 }
 
@@ -57,7 +58,8 @@ main {
 }
 
 h1,
-h2 {
+h2,
+h3 {
   line-height: 1.25;
   font-weight: 650;
 }
@@ -72,17 +74,36 @@ h2 {
   margin: 2rem 0 0.75rem;
 }
 
+h3 {
+  font-size: 1rem;
+  margin: 1.5rem 0 0.75rem;
+}
+
+[id] {
+  scroll-margin-top: 1rem;
+}
+
 p,
-ul {
+ul,
+ol {
   margin: 0 0 1rem;
 }
 
-ul {
+ul,
+ol {
   padding-left: 1.25rem;
 }
 
 li + li {
   margin-top: 0.5rem;
+}
+
+dt {
+  margin-top: 1rem;
+}
+
+dd {
+  margin: 0.25rem 0 1rem 1rem;
 }
 
 code {
@@ -103,13 +124,61 @@ pre code {
   display: block;
 }
 
-.output-label {
+.output-label,
+.layer-label {
   margin-bottom: 0;
   font-size: 0.85rem;
 }
 
-.output-label + pre {
+.layer-label {
+  margin-top: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.75rem;
+}
+
+.output-label + pre,
+.layer-label + pre {
   margin-top: 0.25rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+caption {
+  text-align: left;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+th,
+td {
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid #ccc;
+  padding: 0.4rem 0.3rem;
+}
+
+details {
+  border-block: 1px solid #ccc;
+  padding: 0.75rem 0;
+  margin: 1.5rem 0;
+}
+
+summary {
+  cursor: pointer;
+}
+
+details[open] summary {
+  margin-bottom: 1rem;
+}
+
+.flow {
+  border-left: 1px solid #a71920;
+  padding-left: 1.75rem;
 }
 
 footer {

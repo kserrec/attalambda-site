@@ -12,6 +12,7 @@
     <a class="wordmark" href="index.html">AttaLambda</a>
     <nav aria-label="Main navigation">
       <a href="index.html">Home</a> <span aria-hidden="true">·</span>
+      <a href="learn.html">Learn</a> <span aria-hidden="true">·</span>
       <a href="language.html" aria-current="page">Language</a> <span aria-hidden="true">·</span>
       <a href="examples.html">Examples</a> <span aria-hidden="true">·</span>
       <a href="get-started.html">Get started</a> <span aria-hidden="true">·</span>
@@ -20,98 +21,123 @@
   </header>
   <main>
     <h1>The language</h1>
-    <p>AttaLambda keeps a small computational foundation while making it
-      practical to write and run programs.</p>
+    <p>AttaLambda builds ordinary computation from pure, untyped lambda calculus,
+      adds readable syntax and runtime contracts, and uses a separate host
+      boundary for effects. This page is a concise overview of version 0.8.0.
+      <a href="learn.html">Learn</a> develops the ideas from the ground up.</p>
 
-    <h2>Three building blocks</h2>
-    <p>Ordinary computation reduces to variables, unary lambda abstraction,
-      and application: referring to a value, defining a function of one
-      argument, and applying a function to an argument. The friendlier source
-      syntax expands into these building blocks.</p>
+    <h2 id="computation">Computational model</h2>
+    <p>Variables, unary lambda abstraction, and application form the
+      computational core: refer to a value, define a one-argument function,
+      and apply it. Evaluation is lazy: values are evaluated when needed.
+      Data and ordinary library operations are encoded with functions.</p>
+    <p><a href="learn.html#foundation">Learn: the three building blocks</a>.</p>
 
-    <h2>Readable syntax</h2>
-    <p><code>def</code> names a value or function; <code>lambda</code> creates a
-      function. Multiple arguments are shorthand for nested unary functions:
-      <code>(lambda (x y) (add x y))</code> behaves as
-      <code>(lambda (x) (lambda (y) (add x y)))</code>.
-      Calls apply arguments one at a time.</p>
-    <p><code>let</code> introduces local names in sequence, so later bindings
-      can use earlier ones. <code>list</code> constructs a list, and
-      <code>cond</code> selects a branch and requires a final <code>else</code>.</p>
-    <pre tabindex="0" aria-label="Syntax example"><code>#lang attalambda
+    <h2 id="syntax">Syntax and sugar</h2>
+    <p>Program files end in <code>.attl</code> and begin with
+      <code>#lang attalambda</code>. In an application, the function comes
+      first: <code>(add 2 3)</code>.</p>
+    <dl>
+      <dt><code>(def square x = (mult x x))</code></dt>
+      <dd>Names a value or function. Ordinary self-recursive definitions are rejected.</dd>
+      <dt><code>(lambda (x y) (add x y))</code></dt>
+      <dd>Creates a function. Multiple parameters become nested unary lambdas;
+        multiple-argument calls apply one argument at a time.</dd>
+      <dt><code>(let ((x 2) (y (add x 3))) (list x y))</code></dt>
+      <dd>Introduces local names in sequence; later bindings can use earlier ones.</dd>
+      <dt><code>(list 1 2 3)</code></dt>
+      <dd>Builds a List; <code>(list)</code> is <code>NIL</code>.</dd>
+      <dt><code>(cond ((eq x 0) 1) (else x))</code></dt>
+      <dd>Selects a branch and requires a final <code>else</code>.</dd>
+    </dl>
+    <p>These are syntax fragments; names such as <code>x</code> need a binding
+      in the surrounding program. <a href="learn.html#sugar">Learn: how def expands</a>.</p>
 
-(def add-two = (lambda (x y) (add x y)))
+    <h2 id="types">Values and runtime types</h2>
+    <p>Ordinary public data values carry a type tag and payload in a
+      lambda-encoded pair. Tags identify Error, Bool, List, Result, Char,
+      String, Rat, Unit, Byte, Option, and Map. Public <code>TRUE</code> and
+      <code>FALSE</code> carry the Bool tag; public <code>if</code> checks it.</p>
+    <p>Public operations check their required argument tags at runtime and
+      return Errors on mismatches. This does not constitute a compile-time
+      static type system. Ordinary functions are untagged lambdas; there is
+      no public Function or Any tag.</p>
+    <p><a href="learn.html#objects">Learn: objects as selector lambdas</a> and
+      <a href="learn.html#runtime-types">runtime checking</a>.</p>
 
-(print
-  (let ((x 2) (y (add x 3)))
-    (cond ((eq y 5) (list x y (add-two x y)))
-          (else (list)))))</code></pre>
-    <p class="output-label">Output (no trailing newline)</p>
-    <pre tabindex="0" aria-label="Syntax example output"><code>[2, 5, 7]</code></pre>
+    <h2 id="numbers">Exact numbers</h2>
+    <p>Numbers are exact Rats: a signed numerator over a positive denominator,
+      reduced to lowest terms. Whole numbers are Rats too. Their magnitudes
+      use binary digit lists. Church numerals serve as small tags and
+      metadata, rather than the ordinary arithmetic representation.</p>
+    <p><code>add</code>, <code>sub</code>, and <code>mult</code> return Rats;
+      comparisons such as <code>eq</code> and <code>lt</code> return Bools.
+      <code>div</code>, <code>recip</code>, and <code>exp</code> return Results
+      for arithmetic success or failure, such as division by zero. Wrong
+      argument types produce Errors.</p>
+    <p><a href="examples.html#fractions">Run an exact addition</a>, or
+      <a href="learn.html#numbers">learn the numeric representation</a>.</p>
 
-    <h2>Exact numbers</h2>
-    <p>Numbers are exact rationals: a signed integer numerator over a positive
-      denominator, reduced to lowest terms. Adding <code>1/3</code> and
-      <code>1/6</code> produces <code>1/2</code>. The natural-number magnitudes
-      underneath use binary digit lists, rather than unary Church numerals
-      that encode a number by repeating a function that many times.</p>
+    <h2 id="data">Composite data</h2>
+    <p>Lists link a head value to a tail List, ending in <code>NIL</code>.
+      Operations include <code>cons</code>, <code>head</code>, <code>tail</code>,
+      <code>map</code>, <code>filter</code>, and <code>reduce</code>.
+      Strings, characters, bytes, and conversion between strings and byte
+      lists are also available.</p>
+    <p>Options represent presence or expected absence: <code>some</code> and
+      <code>NONE</code>. Use <code>option-case</code> to select what happens
+      in each case. Results represent success or failure:
+      <code>make-ok</code>, <code>make-err</code>, <code>is-ok</code>,
+      <code>is-err</code>, <code>unwrap-ok</code>, and <code>unwrap-err</code>.
+      An Err holds an Error.</p>
+    <p>Maps associate keys with values. Updates return new Maps while
+      preserving earlier values; lookup returns an Option.</p>
+    <p>Learn the structures: <a href="learn.html#lists">List</a>,
+      <a href="learn.html#options">Option</a>, and
+      <a href="learn.html#results">Result</a>.</p>
 
-    <h2>Types at runtime</h2>
-    <p>Ordinary data values carry tags identifying their types. Public
-      operations check the types they expect while the program runs and
-      produce error values when those contracts fail. This is runtime type
-      checking, not a compile-time static type system: AttaLambda remains
-      untyped lambda calculus underneath.</p>
+    <h2 id="errors">Errors</h2>
+    <p>An Error is a tagged value with a root describing the original problem
+      and a frame List carrying context from checked operations. Operations
+      receiving an Error can propagate it with added context. Error rendering
+      turns that structure into a diagnostic; it is not the same as throwing
+      a Racket exception.</p>
+    <p><a href="learn.html#errors">Learn: a real type mismatch and its structure</a>.</p>
 
     <h2 id="recursion">Recursion</h2>
-    <p>Use <code>rec</code> for a function that calls itself. It expands through
-      a fixed-point combinator, a function that expresses recursion using
-      lambdas and application. Ordinary self-recursive <code>def</code>
-      bindings are intentionally rejected.</p>
-    <pre tabindex="0" aria-label="Recursive factorial program"><code>#lang attalambda
+    <p><code>rec</code> defines a function that can call itself. It expands
+      through a fixed-point combinator built from lambdas and application.
+      A self-recursive ordinary <code>def</code> is intentionally rejected.</p>
+    <p><a href="examples.html#recursion">Run factorial</a>, or
+      <a href="learn.html#recursion">learn how the recursive connection works</a>.</p>
 
-(rec factorial n =
-  (if (eq n 0)
-      1
-      (mult n (factorial (sub n 1)))))
-
-(print (factorial 5))</code></pre>
-    <p class="output-label">Output (no trailing newline)</p>
-    <pre tabindex="0" aria-label="Factorial output"><code>120</code></pre>
-
-    <h2>Effects and the host</h2>
-    <p>Writing to standard output, accessing files, using TCP networking, and
-      exiting a process cross a controlled host boundary. AttaLambda builds
-      requests; the host validates them and performs the external actions.
-      The pure computation and the effects have distinct roles.</p>
-    <p><code>print</code> converts a value to text and passes it to
+    <h2 id="effects">Effects and the host</h2>
+    <p>Standard output, line input, file access, TCP networking, and process
+      exit cross the host boundary. The host validates encoded requests,
+      converts their data, and performs the external actions. HTTP request
+      parsing and response rendering are provided by the language library.</p>
+    <p><code>print</code> renders a value and passes the text to
       <code>stdout</code>. It includes quotation marks when rendering strings
-      and does not add a newline. <code>stdout</code> writes a string’s contents
-      directly, including any newline you supply.</p>
+      and adds no newline. <code>stdout</code> writes a String's contents
+      directly, including any supplied newline.</p>
+    <p><code>(read-line UNIT)</code> returns a Result: Ok containing Some line,
+      Ok containing None at end of input, or Err on failure.
+      <a href="learn.html#host">Learn: the host boundary</a>.</p>
 
-    <h2>Beyond the basics</h2>
-    <p>The language includes lists, exact arithmetic, strings and characters,
-      and conversion between strings and bytes. Options represent a value or
-      its absence; Results represent success or expected failure. Persistent
-      Maps return new maps when updated, preserving earlier values.</p>
-    <p>File operations, TCP networking, and HTTP request parsing and response
-      rendering are also present. The <a href="examples.html#larger-examples">repository
-      examples</a> show these capabilities together.</p>
-
-    <h2>Learn the foundation</h2>
-    <p>New to lambda calculus? Raúl Rojas’s
-      <a href="https://personal.utdallas.edu/~gupta/courses/apl/lambda.pdf"><cite>A
-      Tutorial Introduction to the Lambda Calculus</cite></a> is a concise
-      introduction to the machinery underneath AttaLambda. The linked PDF
-      is hosted by the University of Texas at Dallas.</p>
-    <p>This guide describes <a href="https://github.com/kserrec/attalambda/releases/tag/v0.7.0">AttaLambda
-      v0.7.0</a>, checked against the
-      <a href="https://github.com/kserrec/attalambda/tree/71232f7fb47f8daad61e6a7a6bcf4a5477532352">reviewed
-      source</a> and the public Linux release.</p>
+    <h2>Running programs and going further</h2>
+    <p><a href="get-started.html">Get started</a> covers the Linux download,
+      file execution, and the <code>atta&gt;</code> interactive shell.
+      <a href="examples.html#larger-examples">Larger examples</a> combine
+      files, networking, and data operations.</p>
+    <p>This overview and <a href="learn.html">Learn</a> describe
+      <a href="https://github.com/kserrec/attalambda/releases/tag/v0.8.0">AttaLambda
+      v0.8.0</a>, checked against its
+      <a href="https://github.com/kserrec/attalambda/tree/f309199baa170ba5b12ff6b18b60dc49c114a8a1">release source</a>
+      and public Linux artifact.</p>
   </main>
   <footer>
     <p>AttaLambda is open source under the
-      <a href="https://github.com/kserrec/attalambda/blob/v0.7.0/LICENSE">Apache License 2.0</a>.
+      <a href="https://github.com/kserrec/attalambda/blob/v0.8.0/LICENSE">Apache License 2.0</a>.
       This website uses the <a href="LICENSE">same license</a>.</p>
   </footer>
 </body>

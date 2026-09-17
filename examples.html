@@ -12,6 +12,7 @@
     <a class="wordmark" href="index.html">AttaLambda</a>
     <nav aria-label="Main navigation">
       <a href="index.html">Home</a> <span aria-hidden="true">·</span>
+      <a href="learn.html">Learn</a> <span aria-hidden="true">·</span>
       <a href="language.html">Language</a> <span aria-hidden="true">·</span>
       <a href="examples.html" aria-current="page">Examples</a> <span aria-hidden="true">·</span>
       <a href="get-started.html">Get started</a> <span aria-hidden="true">·</span>
@@ -22,7 +23,7 @@
     <h1>Examples</h1>
     <p>Each program is complete. Save it in a file ending in <code>.attl</code>
       and follow <a href="get-started.html">Get started</a> to run it.
-      These outputs were observed with AttaLambda v0.7.0. The examples use
+      These outputs were observed with AttaLambda v0.8.0. The examples use
       <code>print</code>, which does not add a trailing newline.</p>
 
     <h2 id="hello-world">Hello world</h2>
@@ -43,7 +44,8 @@
 
     <h2 id="mapping">Mapping over a list</h2>
     <p>Pass <code>square</code> as a value to <code>map</code>, which applies it
-      to each list element.</p>
+      to each list element.
+      <a href="learn.html#lists">Learn how Lists are represented</a>.</p>
     <pre tabindex="0" aria-label="List mapping program"><code>#lang attalambda
 
 (def square x = (mult x x))
@@ -54,7 +56,8 @@
 
     <h2 id="recursion">Recursion</h2>
     <p>Define factorial with <code>rec</code> and apply it to a small
-      nonnegative integer.</p>
+      nonnegative integer.
+      <a href="learn.html#recursion">Learn how rec builds the recursive connection</a>.</p>
     <pre tabindex="0" aria-label="Recursive factorial program"><code>#lang attalambda
 
 (rec factorial n =
@@ -67,22 +70,22 @@
     <pre tabindex="0" aria-label="Factorial output"><code>120</code></pre>
 
     <h2 id="larger-examples">Larger examples</h2>
-    <p>The language repository includes complete examples for AttaLambda v0.7.0:</p>
+    <p>The language repository includes complete examples for AttaLambda v0.8.0:</p>
     <ul>
-      <li><a href="https://github.com/kserrec/attalambda/blob/v0.7.0/examples/file-round-trip.attl">File
+      <li><a href="https://github.com/kserrec/attalambda/blob/v0.8.0/examples/file-round-trip.attl">File
         round trip</a> writes a file and reads it back. Run it in an empty
         scratch directory: it creates or replaces <code>attalambda-round-trip.txt</code>.</li>
-      <li><a href="https://github.com/kserrec/attalambda/blob/v0.7.0/examples/http-server.attl">HTTP
+      <li><a href="https://github.com/kserrec/attalambda/blob/v0.8.0/examples/http-server.attl">HTTP
         example</a> prints a local URL, serves one request, closes its listener,
         and exits.</li>
-      <li><a href="https://github.com/kserrec/attalambda/blob/v0.7.0/examples/foundations.attl">Foundations</a>
+      <li><a href="https://github.com/kserrec/attalambda/blob/v0.8.0/examples/foundations.attl">Foundations</a>
         brings together exact numbers, byte conversion, Options, Results, and
         persistent Maps.</li>
     </ul>
   </main>
   <footer>
     <p>AttaLambda is open source under the
-      <a href="https://github.com/kserrec/attalambda/blob/v0.7.0/LICENSE">Apache License 2.0</a>.
+      <a href="https://github.com/kserrec/attalambda/blob/v0.8.0/LICENSE">Apache License 2.0</a>.
       This website uses the <a href="LICENSE">same license</a>.</p>
   </footer>
 </body>

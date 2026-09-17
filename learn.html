@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Learn lambda calculus by watching AttaLambda disappear into it: functions, encoded data, runtime types, recursion, and the host boundary.">
+  <title>Learn — AttaLambda from the ground up</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <a class="wordmark" href="index.html">AttaLambda</a>
+    <nav aria-label="Main navigation">
+      <a href="index.html">Home</a> <span aria-hidden="true">·</span>
+      <a href="learn.html" aria-current="page">Learn</a> <span aria-hidden="true">·</span>
+      <a href="language.html">Language</a> <span aria-hidden="true">·</span>
+      <a href="examples.html">Examples</a> <span aria-hidden="true">·</span>
+      <a href="get-started.html">Get started</a> <span aria-hidden="true">·</span>
+      <a href="https://github.com/kserrec/attalambda">GitHub</a>
+    </nav>
+  </header>
+  <main>
+    <h1>Learn AttaLambda from the ground up</h1>
+    <p>Learn lambda calculus by watching AttaLambda disappear into it.</p>
+    <p>Start with a name, a function, and a function call. We will build up to
+      data, runtime types, errors, recursion, and input and output. You do not
+      need to know lambda calculus or Lisp to follow along.</p>
+    <p>The mathematical examples explain ideas. Blocks labeled “source excerpt”
+      show implementation code; blocks labeled “conceptual view” are drawings
+      in text. Complete runnable programs begin with <code>#lang attalambda</code>.
+      The examples and source links here describe
+      <a href="https://github.com/kserrec/attalambda/releases/tag/v0.8.0">AttaLambda 0.8.0</a>.</p>
+
+    <nav aria-label="On this page">
+      <ol>
+        <li><a href="#foundation">Three small building blocks</a></li>
+        <li><a href="#reduction">Applying a function</a></li>
+        <li><a href="#currying">One argument at a time</a></li>
+        <li><a href="#sugar">What def gives us</a></li>
+        <li><a href="#booleans">A Boolean can choose</a></li>
+        <li><a href="#pairs">A pair waits for a selector</a></li>
+        <li><a href="#objects">From pairs to objects</a></li>
+        <li><a href="#runtime-types">Public values and runtime types</a></li>
+        <li><a href="#tags">Type tags made of lambdas</a></li>
+        <li><a href="#numbers">Practical numbers</a></li>
+        <li><a href="#lists">Lists are linked values</a></li>
+        <li><a href="#options">Option: was there a value?</a></li>
+        <li><a href="#results">Result: did it succeed?</a></li>
+        <li><a href="#errors">Errors carry their explanation</a></li>
+        <li><a href="#recursion">Recursion without a primitive self</a></li>
+        <li><a href="#host">Reaching the outside world</a></li>
+        <li><a href="#whole-picture">Putting it together</a></li>
+      </ol>
+    </nav>
+
+    <section aria-labelledby="foundation">
+      <h2 id="foundation">1. Three small building blocks</h2>
+      <p><code>x</code> refers to a value. We call such a name a <em>variable</em>.</p>
+      <p><code>λx.x</code> describes a function that accepts one argument,
+        names it <code>x</code>, and returns it. The Greek letter <code>λ</code>,
+        pronounced “lambda,” starts the function; the dot separates its parameter
+        from its body. Making a function this way is <em>lambda abstraction</em>.
+        “Unary” just means it takes one argument.</p>
+      <p><code>f x</code> applies the function <code>f</code> to the argument
+        <code>x</code>. This is <em>application</em>: a function call.</p>
+      <table>
+        <caption>The same three forms in two notations</caption>
+        <thead><tr><th scope="col">Idea</th><th scope="col">Calculus</th><th scope="col">AttaLambda</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Variable</th><td><code>x</code></td><td><code>x</code></td></tr>
+          <tr><th scope="row">Unary function</th><td><code>λx.x</code></td><td><code>(lambda (x) x)</code></td></tr>
+          <tr><th scope="row">Application</th><td><code>f x</code></td><td><code>(f x)</code></td></tr>
+        </tbody>
+      </table>
+      <p>In AttaLambda, the function comes first inside the parentheses, followed
+        by its argument. These are expression fragments, not complete programs.</p>
+      <p>Ordinary AttaLambda computation ultimately reduces to variables,
+        one-argument lambdas, and application. The rest of this page shows how
+        those three forms can do so much.</p>
+    </section>
+
+    <section aria-labelledby="reduction">
+      <h2 id="reduction">2. Applying a function</h2>
+      <p>Apply the function by replacing its parameter with the supplied argument:</p>
+      <p class="layer-label">Lambda calculus</p>
+      <pre tabindex="0" aria-label="Identity function reduction"><code>(λx.x) hello
+→ hello</code></pre>
+      <p>The body was just <code>x</code>, so replacing it with <code>hello</code>
+        leaves <code>hello</code>. This simplification is called <em>beta reduction</em>.
+        Here <code>hello</code> stands for some value; it is not a string literal.</p>
+      <p>Substitution replaces the occurrences belonging to this parameter.
+        A name inside another function may belong to that other function instead.
+        When necessary, bound parameters can be renamed to keep those meanings
+        separate. We will use distinct names in the examples.</p>
+    </section>
+
+    <section aria-labelledby="currying">
+      <h2 id="currying">3. One argument at a time</h2>
+      <p>A one-argument function can return another one-argument function:</p>
+      <p class="layer-label">Lambda calculus</p>
+      <pre tabindex="0" aria-label="A function returning a function"><code>λx.λy.x</code></pre>
+      <p>Give it <code>apple</code>. The result is a function still waiting for
+        <code>y</code>. Give that function <code>orange</code>, and it returns
+        the <code>apple</code> it already has:</p>
+      <pre tabindex="0" aria-label="Applying two arguments separately"><code>(λx.λy.x) apple
+→ λy.apple
+
+(λy.apple) orange
+→ apple</code></pre>
+      <p>Representing several arguments as a chain of one-argument functions is
+        called <em>currying</em>. Supplying only the first argument is a
+        <em>partial application</em>: it produces the function for the next one.</p>
+      <p>Application groups to the left: <code>f x y</code> means
+        <code>(f x) y</code>. AttaLambda's <code>(f x y)</code> likewise expands
+        into <code>((f x) y)</code>. A lambda body extends to the right, so
+        <code>λx.λy.x</code> means <code>λx.(λy.x)</code>.</p>
+    </section>
+
+    <section aria-labelledby="sugar">
+      <h2 id="sugar">4. What def gives us</h2>
+      <p>AttaLambda lets us name that function and write its parameters together:</p>
+      <p class="layer-label">You write — declaration fragment</p>
+      <pre tabindex="0" aria-label="AttaLambda first declaration"><code>(def first x y = x)</code></pre>
+      <p class="layer-label">Desugared — implementation syntax</p>
+      <pre tabindex="0" aria-label="The def expansion"><code>(define first
+  (lambda (x)
+    (lambda (y)
+      x)))</code></pre>
+      <p class="layer-label">Lambda calculus — the value named first</p>
+      <pre tabindex="0" aria-label="Calculus form of first"><code>λx.λy.x</code></pre>
+      <p><code>def</code> gives a name to the lambda value and provides friendlier
+        syntax. It does not add another form of computation. Syntax that expands
+        into simpler existing forms is called <em>syntactic sugar</em>.
+        <code>define</code> above is the implementation's binding syntax,
+        not an additional command to write in an <code>.attl</code> file.</p>
+      <p>The release's <a href="https://github.com/kserrec/attalambda/blob/f309199baa170ba5b12ff6b18b60dc49c114a8a1/macros/macros.rkt">def macro</a>
+        constructs precisely these nested unary lambdas. Its
+        <a href="https://github.com/kserrec/attalambda/blob/f309199baa170ba5b12ff6b18b60dc49c114a8a1/lang/expander.rkt">language expander</a>
+        also expands multiple-argument calls one argument at a time.</p>
+    </section>
+
+    <section aria-labelledby="booleans">
+      <h2 id="booleans">5. A Boolean can choose</h2>
+      <p>We have a function that chooses its first argument. A second function
+        can choose its second argument. Those two behaviors give us a way to
+        represent true and false:</p>
+      <p class="layer-label">Lambda calculus — raw Boolean selectors</p>
+      <pre tabindex="0" aria-label="Raw Boolean encodings"><code>raw-true  = λthen.λelse.then
+raw-false = λthen.λelse.else
+
+raw-true apple orange  → apple
+raw-false apple orange → orange</code></pre>
+      <p>A Boolean can be a function that selects one of two arguments. Data can
+        be behavior. These equations show the meaning of the release's
+        <a href="https://github.com/kserrec/attalambda/blob/f309199baa170ba5b12ff6b18b60dc49c114a8a1/core/logic.rkt">raw Boolean functions</a>.</p>
+      <p><strong>These are the internal, raw selectors.</strong> The public
+        AttaLambda values <code>TRUE</code> and <code>FALSE</code> add a type tag
+        around them. We will build that surrounding structure next.</p>
+      <p>AttaLambda evaluates lazily: an argument is evaluated when its value
+        is needed. Selecting one branch therefore need not evaluate the other.
+        This will also matter when we reach recursion.</p>
+    </section>
+
+    <section aria-labelledby="pairs">
+      <h2 id="pairs">6. A pair waits for a selector</h2>
+      <p>To keep two values together, make a function that remembers both and
+        lets its caller choose what to do with them. Here is AttaLambda's actual
+        pair constructor:</p>
+      <p class="layer-label">Source excerpt — core/pair.rkt</p>
+      <pre tabindex="0" aria-label="Actual pair constructor"><code>(def raw-pair left right selector =
+  ((selector left) right))</code></pre>
+      <p class="layer-label">Lambda calculus</p>
+      <pre tabindex="0" aria-label="Curried pair constructor"><code>λleft.λright.λselector.
+  selector left right</code></pre>
+      <p>Supply values <code>A</code> and <code>B</code>. The function still
+        waiting for a selector is the pair itself:</p>
+      <pre tabindex="0" aria-label="Constructing and using a pair"><code>raw-pair A B
+→ λselector.selector A B
+
+(λselector.selector A B) (λleft.λright.left)
+→ (λleft.λright.left) A B
+→ A
+
+(λselector.selector A B) (λleft.λright.right)
+→ (λleft.λright.right) A B
+→ B</code></pre>
+      <p>The first selector retrieves the left value; the second retrieves the
+        right value. The release's <code>raw-first</code> and
+        <code>raw-second</code> do exactly this. A pair needs no primitive
+        container: it is a function waiting for a selector.</p>
+      <p>Source: <a href="https://github.com/kserrec/attalambda/blob/f309199baa170ba5b12ff6b18b60dc49c114a8a1/core/pair.rkt">pair constructor and selectors</a>.
+        Names beginning with <code>raw-</code> here describe internal functions,
+        not additional public commands.</p>
+    </section>
+
+    <section aria-labelledby="objects">
+      <h2 id="objects">7. From pairs to objects</h2>
+      <p>Use the left side of a pair to identify what kind of value it is, and
+        the right side for its contents. The identifier is the <em>type tag</em>;
+        the contents are the <em>payload</em>. AttaLambda calls this an object.</p>
+      <p class="layer-label">Source excerpt — core/objects.rkt</p>
+      <pre tabindex="0" aria-label="Actual object constructor"><code>(def raw-make-object type-tag value =
+  ((raw-pair type-tag) value))</code></pre>
+      <p>Replace <code>raw-pair</code> with its lambda and supply the tag and payload:</p>
+      <p class="layer-label">Lambda calculus — expanding the constructor</p>
+      <pre tabindex="0" aria-label="Reducing an object to its selector lambda"><code>((λleft.λright.λselector.
+    selector left right)
+ type-tag)
+ payload
+
+→ λselector.selector type-tag payload</code></pre>
+      <p><strong>That selector function is the object value.</strong> Giving it
+        the first selector retrieves the tag; giving it the second retrieves
+        the payload. There is no hidden record underneath this lambda.</p>
+
+      <h3>A shorter way to draw the same thing</h3>
+      <p>Now that we have seen the actual representation, we can give its two
+        positions human-readable labels:</p>
+      <p class="layer-label">Conceptual view — structural notation</p>
+      <pre tabindex="0" aria-label="Conceptual tag and payload view"><code>{
+  type: type-tag,
+  value: payload
+}</code></pre>
+      <p><strong>This is not another representation inside AttaLambda.</strong>
+        Nothing has been converted into JSON, a JavaScript object, or a Racket
+        struct. We are drawing the same lambda-encoded structure in a form that
+        is easier to read. The field names are this guide's labels.</p>
+
+      <h3>Structure and meaning</h3>
+      <p>For a concrete example, <code>Rat</code> is the public numeric type:
+        an exact rational number. Its tag is named <code>church-seven</code>.
+        We will explain that name and the number payload shortly. For now,
+        treat them as values filling the pair's two positions.</p>
+      <p class="layer-label">Actual lambda shape — payload abbreviated</p>
+      <pre tabindex="0" aria-label="Rat selector lambda shape"><code>λselector.selector church-seven &lt;rat-payload&gt;</code></pre>
+      <p class="layer-label">Conceptual view — structural</p>
+      <pre tabindex="0" aria-label="Structural view of a Rat"><code>{ type: church-seven, value: &lt;rat-payload&gt; }</code></pre>
+      <p class="layer-label">Conceptual view — semantic, showing its meaning</p>
+      <pre tabindex="0" aria-label="Semantic view of forty-two"><code>{ type: "Rat", value: 42 }</code></pre>
+      <p>The progression from actual lambda → structural view → semantic view
+        changes <strong>our viewpoint</strong>, not the runtime value. The text
+        <code>"Rat"</code> and the familiar number <code>42</code> summarize
+        encoded values. Angle-bracketed names such as <code>&lt;rat-payload&gt;</code>
+        mark omitted structure; they are not executable syntax.</p>
+      <p>We will keep this convention for all the values that follow.
+        Source: <a href="https://github.com/kserrec/attalambda/blob/f309199baa170ba5b12ff6b18b60dc49c114a8a1/core/objects.rkt">object construction and access</a>.</p>
+    </section>
+
+    <section aria-labelledby="runtime-types">
+      <h2 id="runtime-types">8. Public values and runtime types</h2>
+      <p>Ordinary tagged public values share the outer shape we just built:
+        a pair of type tag and payload. The payload differs by type.</p>
+      <p>Return to Booleans. Public <code>TRUE</code> wraps the first-argument
+        selector in a Bool object; public <code>FALSE</code> wraps the
+        second-argument selector.</p>
+      <p class="layer-label">Conceptual view — public TRUE and FALSE</p>
+      <pre tabindex="0" aria-label="Tagged public Booleans"><code>{ type: "Bool", value: raw-true }
+{ type: "Bool", value: raw-false }</code></pre>
+      <p>A raw Boolean selects. A public Bool carries that selector as its
+        payload, plus a tag identifying it as a Bool. Public <code>if</code>
+        checks the condition's tag, then uses its raw payload to choose a branch.</p>
+      <p>Similarly, <code>add</code> expects Rat arguments. Public operations
+        inspect the tags their contracts require while the program runs. A
+        mismatch between an expected tag and an argument's actual tag produces
+        an Error value. We will inspect one below.</p>
+      <p>This is <em>runtime type checking</em>. There is no compile-time static
+        type system proving that every call has the right arguments. The
+        underlying lambda calculus remains untyped. Tags are values and checks
+        are computations built inside it; this is not a blanket safety promise
+        about arbitrary untagged functions.</p>
+      <p>Sources: <a href="https://github.com/kserrec/attalambda/blob/f309199baa170ba5b12ff6b18b60dc49c114a8a1/core/typed-logic.rkt">public Booleans</a>
+        and <a href="https://github.com/kserrec/attalambda/blob/f309199baa170ba5b12ff6b18b60dc49c114a8a1/core/typecheck.rkt">runtime argument checking</a>.</p>
+    </section>
+
+    <section aria-labelledby="tags">
+      <h2 id="tags">9. Type tags made of lambdas</h2>
+      <p>If type identity must stay inside the lambda universe, what can a
+        type tag be? We need a small set of distinct values. A function can
+        encode a small number by applying a supplied step function that many
+        times to a starting value:</p>
+      <p class="layer-label">Lambda calculus — Church numerals</p>
+      <pre tabindex="0" aria-label="The first four Church numerals"><code>0 = λf.λx.x
+1 = λf.λx.f x
+2 = λf.λx.f (f x)
+3 = λf.λx.f (f (f x))</code></pre>
+      <p>For example, the function labeled <code>2</code> accepts <code>f</code>
+        and <code>x</code>, then applies <code>f</code> twice. Such functions are
+        called <em>Church numerals</em>. The left-hand digits label mathematical
+        encodings here; an AttaLambda numeric literal uses the different
+        representation in the next section.</p>
+      <table>
+        <caption>Public type-tag assignments in AttaLambda 0.8.0</caption>
+        <thead><tr><th scope="col">Church numeral</th><th scope="col">Type</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td>Error</td></tr>
+          <tr><td>1</td><td>Bool</td></tr>
+          <tr><td>2</td><td>List</td></tr>
+          <tr><td>3</td><td>Unused by current public types</td></tr>
+          <tr><td>4</td><td>Result</td></tr>
+          <tr><td>5</td><td>Char</td></tr>
+          <tr><td>6</td><td>String</td></tr>
+          <tr><td>7</td><td>Rat</td></tr>
+          <tr><td>8</td><td>Unit</td></tr>
+          <tr><td>9</td><td>Byte</td></tr>
+          <tr><td>10</td><td>Option</td></tr>
+          <tr><td>11</td><td>Map</td></tr>
+        </tbody>
+      </table>
+      <p>Now <code>{ type: church-seven, value: &lt;rat-payload&gt; }</code>
+        has a more precise meaning: the tag is a function that performs seven
+        steps. The tag comparison is also implemented with lambdas.</p>
+      <p>These assignments come from
+        <a href="https://github.com/kserrec/attalambda/blob/f309199baa170ba5b12ff6b18b60dc49c114a8a1/core/tags.rkt">core/tags.rkt</a>.
+        Church numerals also encode small metadata such as Error kinds and
+        argument positions.</p>
+    </section>
+
+    <section aria-labelledby="numbers">
+      <h2 id="numbers">10. Practical numbers</h2>
+      <p><strong>Church numerals are used for tiny tags and metadata, not
+        AttaLambda's ordinary arithmetic.</strong> Ordinary numbers are exact
+        Rats: a signed numerator over a positive denominator, reduced to lowest
+        terms. Whole numbers such as <code>42</code> are Rats too.</p>
+      <p>The magnitudes underneath use lists of binary digits, with raw
+        Booleans representing the bits. The list, the sign, and the surrounding
+        pairs are all lambda-encoded. A number's size is not represented by
+        repeating a function that many times.</p>
+      <p class="layer-label">Complete program</p>
+      <pre tabindex="0" aria-label="Exact addition program"><code>#lang attalambda
+
+(print (add 1/3 1/6))</code></pre>
+      <p class="output-label">Output (no trailing newline)</p>
+      <pre tabindex="0" aria-label="Exact addition output"><code>1/2</code></pre>
+      <p><code>#lang attalambda</code> selects the language for a program file.
+        <code>print</code> renders a value as text; we will follow that text out
+        to the world in the host section.</p>
+      <details>
+        <summary>See the number payload</summary>
+        <p>A Rat object contains a raw pair of numerator and denominator. The
+          numerator is another raw pair: a Boolean sign (true means nonnegative)
+          and magnitude bits. The denominator is positive magnitude bits. In
+          the structural notation below, <code>pair(a, b)</code> abbreviates
+          the same selector function we derived earlier.</p>
+        <p class="layer-label">Conceptual view — payload structure</p>
+        <pre tabindex="0" aria-label="Rational number payload"><code>{
+  type: church-seven,
+  value: pair(
+    pair(&lt;sign&gt;, &lt;numerator-bits&gt;),
+    &lt;denominator-bits&gt;
+  )
+}</code></pre>
+        <p>For 42, the sign is raw true, the numerator bits represent binary
+          <code>101010</code>, and the denominator bits represent <code>1</code>.
+          Zero is normalized to positive 0/1.</p>
+        <p>Sources: <a href="https://github.com/kserrec/attalambda/blob/f309199baa170ba5b12ff6b18b60dc49c114a8a1/core/rat.rkt">rational payloads</a>,
+          <a href="https://github.com/kserrec/attalambda/blob/f309199baa170ba5b12ff6b18b60dc49c114a8a1/core/int.rkt">signed numerators</a>,
+          <a href="https://github.com/kserrec/attalambda/blob/f309199baa170ba5b12ff6b18b60dc49c114a8a1/core/binary-nat.rkt">binary magnitudes</a>.</p>
+      </details>
+    </section>
+
+    <section aria-labelledby="lists">
+      <h2 id="lists">11. Lists are linked values</h2>
+      <p>A List holds a sequence of values. In the friendly view, the result of
+        <code>(list 1 2 3)</code> looks like this:</p>
+      <p class="layer-label">Conceptual view — semantic</p>
+      <pre tabindex="0" aria-label="Semantic list view"><code>{ type: "List", values: [1, 2, 3] }</code></pre>
+      <p><code>values</code> and the square brackets summarize the sequence;
+        no host array is stored. A nonempty List is an object whose payload is
+        a pair: its first element, called the <em>head</em>, and the remaining
+        List, called the <em>tail</em>.</p>
+      <p class="layer-label">Conceptual view — one node</p>
+      <pre tabindex="0" aria-label="A list node's pair-backed structure"><code>{
+  type: "List",
+  value: pair(&lt;Rat 1&gt;, &lt;List containing 2 and 3&gt;)
+}</code></pre>
+      <p>Here and below, <code>pair(a, b)</code> is drawing shorthand for
+        <code>λselector.selector a b</code>. Follow each tail to get the next
+        node. After the last element, the tail is <code>NIL</code>, the
+        canonical empty List.</p>
+      <p class="layer-label">Source excerpt — nonempty node construction</p>
+      <pre tabindex="0" aria-label="Actual list constructor"><code>(def raw-cons value tail =
+  ((raw-make-object list-type)
+   ((raw-pair value) tail)))</code></pre>
+      <p>The special <code>NIL</code> object has an empty-list Error sentinel
+        in both payload positions, instead of a normal head and tail. The
+        implementation recognizes the end by the Error tag in the tail
+        position. Calling public <code>head</code> or <code>tail</code> on
+        <code>NIL</code> yields an Error.</p>
+      <p>Sources: <a href="https://github.com/kserrec/attalambda/blob/f309199baa170ba5b12ff6b18b60dc49c114a8a1/core/errors.rkt">raw-cons and canonical NIL</a>,
+        <a href="https://github.com/kserrec/attalambda/blob/f309199baa170ba5b12ff6b18b60dc49c114a8a1/core/lists.rkt">List access and operations</a>.
+        We only need the node structure here; the public operations are
+        summarized in <a href="language.html#data">Language</a>.</p>
+    </section>
+
+    <section aria-labelledby="options">
+      <h2 id="options">12. Option: was there a value?</h2>
+      <p>A search can legitimately find nothing. Option represents that
+        expected absence: <code>(some 42)</code> holds a value, while
+        <code>NONE</code> holds no value.</p>
+      <p class="layer-label">Conceptual view — semantic</p>
+      <pre tabindex="0" aria-label="Some and None views"><code>{ type: "Option", variant: "Some", value: 42 }
+{ type: "Option", variant: "None" }</code></pre>
+      <p><code>variant</code> names which case we mean; it is not a stored field.
+        The actual object has the Option tag and a pair payload. The pair's
+        first value is a raw Boolean saying whether a value is present; its
+        second is the value. For None, the second position is an unused raw false.</p>
+      <p class="layer-label">Conceptual view — structural</p>
+      <pre tabindex="0" aria-label="Actual Option payload shapes"><code>Some: { type: church-ten,
+        value: pair(raw-true, &lt;contained value&gt;) }
+
+None: { type: church-ten,
+        value: pair(raw-false, raw-false) }</code></pre>
+      <p>Public <code>some</code> passes an Error argument along instead of
+        hiding it inside Some. Expected absence and failure are different ideas.
+        Source: <a href="https://github.com/kserrec/attalambda/blob/f309199baa170ba5b12ff6b18b60dc49c114a8a1/core/option.rkt">Option construction and selection</a>.</p>
+    </section>
+
+    <section aria-labelledby="results">
+      <h2 id="results">13. Result: did it succeed?</h2>
+      <p>A file read can succeed or fail. Result represents those outcomes:
+        an Ok contains the successful value; an Err contains an Error explaining
+        the failure. Public constructors are <code>make-ok</code> and
+        <code>make-err</code>.</p>
+      <p class="layer-label">Conceptual view — semantic</p>
+      <pre tabindex="0" aria-label="Ok and Err views"><code>{ type: "Result", variant: "Ok", value: 42 }
+{ type: "Result", variant: "Err", error: &lt;Error&gt; }</code></pre>
+      <p>The representation uses the same idea as Option: an outer tag and
+        a payload pair containing a raw Boolean discriminator and a value.
+        “Discriminator” just means the value that tells the two cases apart.
+        Here raw true means success, and raw false means failure.</p>
+      <details>
+        <summary>See the Result payload</summary>
+        <p class="layer-label">Conceptual view — structural</p>
+        <pre tabindex="0" aria-label="Result pair payloads"><code>Ok:  { type: church-four,
+       value: pair(raw-true, &lt;successful value&gt;) }
+
+Err: { type: church-four,
+       value: pair(raw-false, &lt;Error value&gt;) }</code></pre>
+        <p><code>make-ok</code> propagates an Error argument. In contrast,
+          <code>make-err</code> deliberately accepts an Error as data so a
+          program can inspect the Result before choosing what to do.</p>
+      </details>
+      <p><strong>Option asks “was there a value?” Result asks “did the operation
+        succeed?”</strong> A successful operation can even return an Option:
+        <code>read-line</code> returns an Ok containing None at end of input,
+        while an input failure is an Err.</p>
+      <p>Source: <a href="https://github.com/kserrec/attalambda/blob/f309199baa170ba5b12ff6b18b60dc49c114a8a1/core/result.rkt">Result construction and access</a>.
+        The next section explains the Error inside an Err.</p>
+    </section>
+
+    <section aria-labelledby="errors">
+      <h2 id="errors">14. Errors carry their explanation</h2>
+      <p>Give <code>add</code> a Rat and a String. Its second argument fails
+        the runtime contract:</p>
+      <p class="layer-label">Complete program</p>
+      <pre tabindex="0" aria-label="Type mismatch program"><code>#lang attalambda
+
+(print (add 4 "hello"))</code></pre>
+      <p class="output-label">Output (no trailing newline)</p>
+      <pre tabindex="0" aria-label="Type mismatch output"><code>ERROR(add(arg2 expected RAT got STRING))</code></pre>
+      <p>This text is the rendered explanation of a value. The value contains
+        a <em>root</em> recording what originally went wrong and a list of
+        <em>frames</em> recording context as the Error passes through checked
+        operations.</p>
+      <p class="layer-label">Conceptual view — semantic</p>
+      <pre tabindex="0" aria-label="Structured view of the mismatch Error"><code>{
+  type: "Error",
+  root: {
+    kind: "TypeMismatch",
+    details: {
+      argument: 2,
+      expected: "Rat",
+      actual: "String"
+    }
+  },
+  frames: [
+    { function: "add", argument: 2, expected: "Rat" }
+  ]
+}</code></pre>
+      <p>The field names, strings, numbers, and brackets are our semantic
+        notation. The real Error is a tagged selector pair whose payload pairs
+        the root with the frame List. The root, details, and individual frames
+        are themselves encoded using pairs; kinds, positions, and types use
+        small Church numerals.</p>
+      <p><strong>An AttaLambda Error is another tagged value inside AttaLambda.</strong>
+        It is not a Racket exception acting as the language's error mechanism.
+        This printed program exits normally. Syntax errors and failures in
+        the surrounding runner are a different matter.</p>
+      <details>
+        <summary>See the Error structure and one more frame</summary>
+        <p class="layer-label">Conceptual view — structural payload</p>
+        <pre tabindex="0" aria-label="Error pair structure"><code>Error  = pair(error-type, pair(root, frames))
+root   = pair(type-mismatch-kind, details)
+details = pair(argument-position-two,
+               pair(rat-type, string-type))
+frame  = pair(&lt;String "add"&gt;,
+              pair(argument-position-two, rat-type))</code></pre>
+        <p>Those names abbreviate lambda-encoded values, not host records.
+          A checked operation receiving an Error preserves the root and adds
+          its own frame. Try putting the failed addition inside multiplication:</p>
+        <p class="layer-label">Complete program</p>
+        <pre tabindex="0" aria-label="Nested mismatch program"><code>#lang attalambda
+
+(print (mult 2 (add 4 "hello")))</code></pre>
+        <p class="output-label">Output (no trailing newline)</p>
+        <pre tabindex="0" aria-label="Nested mismatch output"><code>ERROR(add(arg2 expected RAT got STRING)
+  -&gt; mult(arg2 expected RAT))</code></pre>
+        <p>The root still describes the String supplied to <code>add</code>.
+          The new frame says <code>mult</code> encountered that Error where it
+          expected its second Rat. New frames are prepended internally; the
+          rendered diagnostic shows them from the original failure outward.</p>
+      </details>
+      <p>Sources: <a href="https://github.com/kserrec/attalambda/blob/f309199baa170ba5b12ff6b18b60dc49c114a8a1/core/errors.rkt">Error structure</a>,
+        <a href="https://github.com/kserrec/attalambda/blob/f309199baa170ba5b12ff6b18b60dc49c114a8a1/core/typecheck.rkt">contract checks and propagation</a>,
+        <a href="https://github.com/kserrec/attalambda/blob/f309199baa170ba5b12ff6b18b60dc49c114a8a1/core/render-error.rkt">diagnostic rendering</a>.</p>
+    </section>
+
+    <section aria-labelledby="recursion">
+      <h2 id="recursion">15. Recursion without a primitive self</h2>
+      <p>A lambda does not automatically receive a name referring to itself.
+        How can a function call itself? Start by imagining a function that
+        receives the recursive operation as an argument. A <em>fixed-point
+        combinator</em> supplies the connection: it builds a value that behaves
+        like applying that function to the value itself.</p>
+      <p>AttaLambda's <code>rec</code> provides syntax for that construction.
+        Here factorial returns 1 at zero; otherwise it multiplies the input by
+        the factorial of one less. For 5, that gives 5 × 4 × 3 × 2 × 1.</p>
+      <p class="layer-label">Complete program</p>
+      <pre tabindex="0" aria-label="Recursive factorial program"><code>#lang attalambda
+
+(rec factorial n =
+  (if (eq n 0)
+      1
+      (mult n (factorial (sub n 1)))))
+
+(print (factorial 5))</code></pre>
+      <p class="output-label">Output (no trailing newline)</p>
+      <pre tabindex="0" aria-label="Factorial output"><code>120</code></pre>
+      <p>The example is intended for nonnegative whole inputs. A plain
+        self-recursive <code>def</code> is rejected; use <code>rec</code>.</p>
+      <p class="layer-label">Desugared — expansion shape</p>
+      <pre tabindex="0" aria-label="The rec expansion shape"><code>(def factorial =
+  (language-fix
+    (lambda (factorial)
+      (lambda (n)
+        (if (eq n 0)
+            1
+            (mult n (factorial (sub n 1))))))))</code></pre>
+      <p>The body now receives <code>factorial</code> as a parameter.
+        <code>language-fix</code> is the expander's internal name for
+        <code>raw-fix</code>, not a public function to call in a program.
+        <code>def</code> and the multiple-argument calls then expand as before.</p>
+      <p>So <code>rec</code> leads to a function receiving its recursive self,
+        then a fixed-point construction, then only lambdas and application.
+        Lazy evaluation lets the next recursive step wait until it is needed;
+        the chosen base case can stop the process.</p>
+      <details>
+        <summary>How the fixed-point construction works</summary>
+        <p class="layer-label">Source excerpt — core/fix.rkt</p>
+        <pre tabindex="0" aria-label="Actual fixed-point implementation"><code>(def raw-fix function =
+  ((lambda (self)
+     (function (self self)))
+   (lambda (self)
+     (function (self self)))))</code></pre>
+        <p>Call the supplied function <code>F</code>, and abbreviate
+          <code>λself.F (self self)</code> as <code>W</code>. The construction
+          is <code>W W</code>. One reduction gives <code>F (W W)</code>:
+          <code>F</code> receives the very construction we started with. That
+          is the fixed-point relationship.</p>
+        <p>Nothing primitive named “recurse” is added. The equation explains
+          the connection, not a guarantee of termination: demanding endless
+          recursive work still runs forever.</p>
+      </details>
+      <p>Sources: <a href="https://github.com/kserrec/attalambda/blob/f309199baa170ba5b12ff6b18b60dc49c114a8a1/lang/expander.rkt">rec expansion</a>
+        and <a href="https://github.com/kserrec/attalambda/blob/f309199baa170ba5b12ff6b18b60dc49c114a8a1/core/fix.rkt">fixed-point implementation</a>.</p>
+    </section>
+
+    <section aria-labelledby="host">
+      <h2 id="host">16. Reaching the outside world</h2>
+      <p>A universe of pure lambdas can calculate, but calculation alone cannot
+        print text, read a file, or accept a network connection. Those actions
+        are <em>effects</em>: interactions with the outside world.</p>
+      <p>AttaLambda builds encoded requests and passes them to a deliberate
+        boundary called the <em>host</em>. The host validates each request,
+        converts encoded values for the external operation, performs it, and
+        returns encoded results when the operation returns.</p>
+      <ol class="flow" aria-label="The effect boundary">
+        <li>Pure AttaLambda computation builds a request.</li>
+        <li>The host validates and converts it.</li>
+        <li>The operating system performs terminal, file, TCP, or process work.</li>
+      </ol>
+      <p><code>print</code> renders a value to a String and passes it to
+        <code>stdout</code>. <code>stdout</code> writes the string's contents;
+        <code>read-line</code> receives a line of input. File operations read
+        and write files; TCP operations communicate over network connections;
+        <code>exit</code> ends the process.</p>
+      <p>Racket provides the execution environment, including lazy evaluation
+        and this boundary. It is not a shortcut for implementing ordinary
+        AttaLambda arithmetic or data operations with host numbers and records.
+        The ordinary computation we traced remains lambda-encoded.</p>
+      <p>Sources: <a href="https://github.com/kserrec/attalambda/blob/f309199baa170ba5b12ff6b18b60dc49c114a8a1/runtime/host.rkt">host dispatcher</a>
+        and <a href="https://github.com/kserrec/attalambda/blob/f309199baa170ba5b12ff6b18b60dc49c114a8a1/runtime/codec.rkt">boundary conversions</a>.</p>
+    </section>
+
+    <section aria-labelledby="whole-picture">
+      <h2 id="whole-picture">17. Putting it together</h2>
+      <p>We can now read the language as one connected construction:</p>
+      <ol class="flow" aria-label="The complete mental model">
+        <li>AttaLambda source gives us readable names and expressions.</li>
+        <li>Syntactic sugar expands into simpler forms.</li>
+        <li>Variables, unary lambdas, and application do the computation.</li>
+        <li>Functions encode behavior and data, including selectors and pairs.</li>
+        <li>Pairs give public values their type tags and payloads.</li>
+        <li>Runtime contracts inspect tags and produce structured Errors.</li>
+        <li>The host handles effects when the outside world is needed.</li>
+      </ol>
+      <p>These are layers of explanation, not a sequence of runtime conversions.
+        In particular, the object-like drawings never replace the selector
+        lambdas. We have changed how we read the values, not what they are.</p>
+      <p>Use <a href="language.html">Language</a> for a concise overview,
+        <a href="examples.html">Examples</a> for complete programs, and
+        <a href="get-started.html">Get started</a> to run them or try the
+        interactive shell. The
+        <a href="https://github.com/kserrec/attalambda/tree/f309199baa170ba5b12ff6b18b60dc49c114a8a1">release source</a>
+        lets you follow every layer further.</p>
+      <p>For more on the calculus itself, Raúl Rojas's
+        <a href="https://personal.utdallas.edu/~gupta/courses/apl/lambda.pdf"><cite>A
+        Tutorial Introduction to the Lambda Calculus</cite></a> is optional
+        further reading. The PDF is hosted by the University of Texas at Dallas.</p>
+    </section>
+  </main>
+  <footer>
+    <p>AttaLambda is open source under the
+      <a href="https://github.com/kserrec/attalambda/blob/v0.8.0/LICENSE">Apache License 2.0</a>.
+      This website uses the <a href="LICENSE">same license</a>.</p>
+  </footer>
+</body>
+</html>

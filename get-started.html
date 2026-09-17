@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Download AttaLambda v0.7.0 for Linux x86-64, verify the archive, and run your first .attl program using the included runtime.">
+  <meta name="description" content="Download AttaLambda v0.8.0 for Linux x86-64, verify it, run a .attl program, and try the atta&gt; interactive shell.">
   <title>Get started — AttaLambda</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -12,6 +12,7 @@
     <a class="wordmark" href="index.html">AttaLambda</a>
     <nav aria-label="Main navigation">
       <a href="index.html">Home</a> <span aria-hidden="true">·</span>
+      <a href="learn.html">Learn</a> <span aria-hidden="true">·</span>
       <a href="language.html">Language</a> <span aria-hidden="true">·</span>
       <a href="examples.html">Examples</a> <span aria-hidden="true">·</span>
       <a href="get-started.html" aria-current="page">Get started</a> <span aria-hidden="true">·</span>
@@ -20,33 +21,33 @@
   </header>
   <main>
     <h1>Get started</h1>
-    <p>The public binary download for AttaLambda v0.7.0 supports
+    <p>The public binary download for AttaLambda v0.8.0 supports
       <strong>Linux x86-64</strong>. It includes its own Racket runtime;
       you do not need to install Racket separately.</p>
     <p>Find the downloads on <a href="https://github.com/kserrec/attalambda/releases">GitHub
       releases</a>, or inspect the <a href="https://github.com/kserrec/attalambda">source
       repository</a>. These instructions were tested with
-      <a href="https://github.com/kserrec/attalambda/releases/tag/v0.7.0">v0.7.0</a>.</p>
+      <a href="https://github.com/kserrec/attalambda/releases/tag/v0.8.0">v0.8.0</a>.</p>
 
     <h2>1. Download and verify</h2>
     <p>Save both files in the same directory:</p>
     <ul>
-      <li><a href="https://github.com/kserrec/attalambda/releases/download/v0.7.0/attalambda-0.7.0-linux-x86_64.tar.gz">attalambda-0.7.0-linux-x86_64.tar.gz</a></li>
-      <li><a href="https://github.com/kserrec/attalambda/releases/download/v0.7.0/SHA256SUMS">SHA256SUMS</a></li>
+      <li><a href="https://github.com/kserrec/attalambda/releases/download/v0.8.0/attalambda-0.8.0-linux-x86_64.tar.gz">attalambda-0.8.0-linux-x86_64.tar.gz</a></li>
+      <li><a href="https://github.com/kserrec/attalambda/releases/download/v0.8.0/SHA256SUMS">SHA256SUMS</a></li>
     </ul>
     <p>From that directory, check the archive’s checksum:</p>
     <pre tabindex="0" aria-label="Verify the download"><code>sha256sum -c SHA256SUMS</code></pre>
     <p class="output-label">Expected output</p>
-    <pre tabindex="0" aria-label="Checksum verification output"><code>attalambda-0.7.0-linux-x86_64.tar.gz: OK
+    <pre tabindex="0" aria-label="Checksum verification output"><code>attalambda-0.8.0-linux-x86_64.tar.gz: OK
 </code></pre>
     <p>Continue only if the archive reports <code>OK</code>.</p>
 
     <h2>2. Extract and run</h2>
-    <pre tabindex="0" aria-label="Extract the distribution and check its version"><code>tar -xzf attalambda-0.7.0-linux-x86_64.tar.gz
-cd attalambda-0.7.0-linux-x86_64
+    <pre tabindex="0" aria-label="Extract the distribution and check its version"><code>tar -xzf attalambda-0.8.0-linux-x86_64.tar.gz
+cd attalambda-0.8.0-linux-x86_64
 ./bin/attalambda --version</code></pre>
     <p class="output-label">Version output</p>
-    <pre tabindex="0" aria-label="Version output"><code>AttaLambda 0.7.0
+    <pre tabindex="0" aria-label="Version output"><code>AttaLambda 0.8.0
 </code></pre>
     <p>Keep the extracted distribution together, including its <code>bin/</code>
       and <code>lib/</code> directories. Run the included hello example:</p>
@@ -70,14 +71,39 @@ cd attalambda-0.7.0-linux-x86_64
       add a newline. The included hello example instead uses
       <code>stdout</code> with an explicit newline.</p>
 
+    <h2 id="interactive-shell">4. Try the interactive shell</h2>
+    <p>From the extracted distribution directory, start the shell:</p>
+    <pre tabindex="0" aria-label="Start the interactive shell"><code>./bin/attalambda --no-history</code></pre>
+    <p>The <code>atta&gt;</code> prompt means it is ready for an expression.
+      Enter each line below separately, without a <code>#lang</code> line:</p>
+    <pre tabindex="0" aria-label="Interactive shell input"><code>(add 1/3 1/6)
+(def twice x = (add x x))
+(twice 21)</code></pre>
+    <p class="output-label">Results (the definition itself is silent)</p>
+    <pre tabindex="0" aria-label="Interactive shell results"><code>=&gt; 1/2
+=&gt; 42
+</code></pre>
+    <p>Definitions remain available for later entries. Enter <code>:help</code>
+      to see commands, <code>:reset</code> to discard session definitions, or
+      <code>:quit</code> to leave. Unlike file execution, the shell automatically
+      prints expression results, so these examples need no <code>print</code>.</p>
+    <p><code>--no-history</code> disables persistent source history. Starting
+      <code>./bin/attalambda</code> without that option enables history.
+      For redirected input, use <code>./bin/attalambda --repl --no-history</code>;
+      that mode emits results without interactive prompts.</p>
+    <p>Automatic printing supports finite tagged data. Before evaluating a
+      raw function value, enter <code>:echo off</code>: automatic rendering
+      of untagged functions is unspecified and can fail or keep evaluating.</p>
+
     <h2>Keep going</h2>
     <p>Run <code>./bin/attalambda --help</code> for command-line usage.
-      Try the <a href="examples.html">examples</a>, or read about
-      <a href="language.html">the language</a>.</p>
+      Try the <a href="examples.html">examples</a>,
+      <a href="learn.html">learn how the language grows from lambda calculus</a>,
+      or use the <a href="language.html">language overview</a>.</p>
   </main>
   <footer>
     <p>AttaLambda is open source under the
-      <a href="https://github.com/kserrec/attalambda/blob/v0.7.0/LICENSE">Apache License 2.0</a>.
+      <a href="https://github.com/kserrec/attalambda/blob/v0.8.0/LICENSE">Apache License 2.0</a>.
       This website uses the <a href="LICENSE">same license</a>.</p>
   </footer>
 </body>
