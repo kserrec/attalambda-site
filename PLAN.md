@@ -280,7 +280,7 @@ push. No temporary verification process remains listening on ports 8765 or
 
 Publication is authorized for `https://attalambda.com/` and
 `https://www.attalambda.com/`. Implementation and investigation records are
-pushed through `f6aa133`; publication verification remains pending.
+pushed through `4bcc69a`; publication verification remains pending.
 
 ### Existing hosting and diagnosed blocker
 
@@ -328,11 +328,30 @@ Temporary Wrangler 4.134.0 remains outside the site repository at
 Cloudflare-hosted builds. No local interactive login was started, and all
 Wrangler probes used `--env-file /dev/null`; no dotenv file was inspected.
 
-Next action: push this corrected deployment record to `origin/main` to trigger
-a build, monitor the Cloudflare GitHub check, and verify the public pages and
-stylesheet against the recorded production hashes. The verification script is
-`/tmp/attalambda-redesign/check-live-site.py`; reports and downloaded responses
-are under `/tmp/attalambda-redesign/publication-check/`. A baseline probe before
-this push still served the original files on both domains, with 404 responses
-for `learn.html`. Do not treat a successful source push alone as proof of
-website publication.
+Pushed deployment-record commit
+`4bcc69a9921bbb9b2078cc9d165360a4fff331d5` to `origin/main`. It triggered
+Cloudflare build `9698f22d-08a0-4f1a-87f2-d88e884750a2`, which GitHub reports
+completed successfully at 2026-09-17 22:25:58 UTC, publishing Worker version
+`d7c536e5-74b2-42bc-af6c-ea24122ccf16`. This proves the restored GitHub trigger
+works. No production source file changed during this deployment repair.
+
+The first build after reconnection passed 12 of 14 live-file checks. The four
+existing pages, stylesheet, and license on both domains exactly matched the
+source; `learn.html` returned HTTP 404 on both domains. Direct `/learn` and
+unique-query requests also returned 404.
+
+Kyle then pasted the full saved Cloudflare build command. It still copied only
+`index.html language.html examples.html get-started.html style.css LICENSE`,
+which directly explains the absent Learn asset. He replaced the Cloudflare
+Build command with the revised command above and explicitly confirmed
+"saved in Cloudflare". The next push will test this corrected upload list.
+
+The verification script is `/tmp/attalambda-redesign/check-live-site.py`.
+Post-build evidence is at
+`/tmp/attalambda-redesign/publication-check/1789683979329121878/report.json`.
+All downloaded responses and headers are outside the source repository.
+
+Next action: commit/push this diagnosed deployment result to trigger a new
+Cloudflare build using the corrected upload command. Require all 14 live-file
+checks to pass before recording publication as complete, then commit/push the
+final result record and leave Git clean.
