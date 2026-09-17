@@ -4,6 +4,7 @@ Specification: `attalambda-site-ground-up-learning-redesign-spec.md`, supplied
 2026-09-17. Original endpoint: implemented, tested, reviewed candidate.
 After acceptance, Kyle explicitly authorized committing, pushing, and publishing
 on 2026-09-17. Git destination: `origin/main` in `kserrec/attalambda-site`.
+Production destination: `https://attalambda.com/`, confirmed by Kyle.
 
 ## Verified starting state
 
@@ -277,15 +278,37 @@ pull-request workflow is defined. No PR or merge is required for this direct
 push. No temporary verification process remains listening on ports 8765 or
 9229; the session's browser and server were closed.
 
-Publication is authorized but not yet performed. GitHub Pages, Actions
-workflows, deployments, repository environments, and a homepage URL were absent
-at the publication check. The initial commit also records hosting as outside
-its prior scope. Kyle was asked to choose GitHub Pages at
-`https://kserrec.github.io/attalambda-site/` or provide an existing host/domain.
-That destination answer remains pending. No hosting or DNS configuration has
-been created or changed.
+Publication is authorized but not yet performed. Kyle confirmed the existing
+production domain is `https://attalambda.com/`; no destination choice remains.
+The implementation and delivery record are pushed through commit
+`3df49a972a55a192695279922a5129392498d94b`. The following publication investigation
+made no production-file, hosting, or DNS changes.
 
-Next action: publish the committed static site to Kyle's chosen destination,
-verify that the public five pages and stylesheet match the recorded production
-hashes, record the live URL and deployment result, and leave Git clean/pushed.
-Do not treat the successful source push as evidence of website publication.
+Observed on 2026-09-17:
+
+- `https://attalambda.com/` returned HTTP 200 through Cloudflare. Its downloaded
+  homepage exactly matches `index.html` at the original commit
+  `46263fec9e8478b079aeadd7e32d8981c09fbbed`, with SHA-256
+  `6cce269782983aa925ce951289dc7c82b9bc6ec90608118efeebcf5878368a0c`.
+  The redesign is therefore not yet published at this domain.
+- Cloudflare handles the domain's nameservers and HTTP edge. This does not
+  establish whether its origin is Cloudflare Pages, Workers, or another host.
+- GitHub Pages, Actions workflows, deployments, repository environments,
+  repository webhooks, commit checks/status entries, and a homepage URL were
+  absent in the inspected site repository. No automatic deployment connection
+  was established by these checks; an external integration remains unverified.
+- Temporary Wrangler 4.134.0 is installed outside the site repository at
+  `/tmp/attalambda-publish-tools/`. `wrangler whoami` reports unauthenticated;
+  `wrangler auth list` reports no profiles. Commands ran from that temporary
+  directory with `--env-file /dev/null`; no dotenv file was inspected.
+- A Cloudflare integration was suggested, but installation and account
+  connection have not been confirmed. No interactive login was started.
+
+Next action: obtain the Cloudflare account connection, identify the existing
+project and deployment mechanism for `attalambda.com`, and publish the committed
+static site there under Kyle's existing authorization. Verify that the public
+five pages and stylesheet match the recorded production hashes, record the live
+deployment result, and leave Git clean/pushed. Determine whether GitHub can
+trigger that existing deployment automatically. Do not treat the successful
+source push as evidence of website publication or Cloudflare DNS as proof of
+the origin hosting product.
