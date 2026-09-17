@@ -278,9 +278,11 @@ pull-request workflow is defined. No PR or merge is required for this direct
 push. No temporary verification process remains listening on ports 8765 or
 9229; the session's browser and server were closed.
 
-Publication is authorized for `https://attalambda.com/` and
-`https://www.attalambda.com/`. Implementation and investigation records are
-pushed through `4bcc69a`; publication verification remains pending.
+Published and verified at `https://attalambda.com/` and
+`https://www.attalambda.com/`, including the new Learn page at `/learn`.
+All 14 live-file checks passed after deployment of
+`93f47d710768621903192ec24e19065ff330f4f4`. The final documentation-only commit
+records this result; production files remain exactly the tested candidate.
 
 ### Existing hosting and diagnosed blocker
 
@@ -344,14 +346,36 @@ Kyle then pasted the full saved Cloudflare build command. It still copied only
 `index.html language.html examples.html get-started.html style.css LICENSE`,
 which directly explains the absent Learn asset. He replaced the Cloudflare
 Build command with the revised command above and explicitly confirmed
-"saved in Cloudflare". The next push will test this corrected upload list.
+"saved in Cloudflare". The subsequent push successfully tested this corrected
+upload list.
 
 The verification script is `/tmp/attalambda-redesign/check-live-site.py`.
-Post-build evidence is at
+Evidence for the first, incomplete deployment is at
 `/tmp/attalambda-redesign/publication-check/1789683979329121878/report.json`.
 All downloaded responses and headers are outside the source repository.
 
-Next action: commit/push this diagnosed deployment result to trigger a new
-Cloudflare build using the corrected upload command. Require all 14 live-file
-checks to pass before recording publication as complete, then commit/push the
-final result record and leave Git clean.
+### Verified publication
+
+Commit `93f47d710768621903192ec24e19065ff330f4f4` triggered Cloudflare build
+`55d6d4c8-611c-4ef3-b885-9efd9eb2586f`, which completed successfully at
+2026-09-17 22:35:22 UTC and published Worker version
+`88960041-53d4-4b92-aeeb-9206e7183329`.
+
+The live verification report is
+`/tmp/attalambda-redesign/publication-check/1789684540581614333/report.json`.
+All seven files on both domain names returned HTTP 200 after redirects and
+matched the source SHA-256 hashes byte-for-byte: five HTML pages, `style.css`,
+and `LICENSE`. The new `learn.html` URL redirects successfully to `/learn`.
+No application or teaching-content change was needed during deployment repair.
+
+The original acceptance checks remain applicable to these identical published
+files: executable examples, release-download instructions, local/external links,
+real browser layouts and 200% zoom, keyboard navigation, and both fresh reviews.
+No session verification server remains listening on ports 8765 or 9229.
+
+The restored Cloudflare GitHub integration now demonstrably builds pushes to
+`main` and publishes them to both domain names. Its Build command explicitly
+lists upload files; add future public files there when adding them to the site.
+Generated upload files remain outside the source repository. No required
+implementation or publication work remains after the final record is pushed
+and its automatic build succeeds.
