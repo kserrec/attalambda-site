@@ -278,37 +278,61 @@ pull-request workflow is defined. No PR or merge is required for this direct
 push. No temporary verification process remains listening on ports 8765 or
 9229; the session's browser and server were closed.
 
-Publication is authorized but not yet performed. Kyle confirmed the existing
-production domain is `https://attalambda.com/`; no destination choice remains.
-The implementation and delivery record are pushed through commit
-`3df49a972a55a192695279922a5129392498d94b`. The following publication investigation
-made no production-file, hosting, or DNS changes.
+Publication is authorized for `https://attalambda.com/` and
+`https://www.attalambda.com/`. Implementation and investigation records are
+pushed through `f6aa133`; publication verification remains pending.
 
-Observed on 2026-09-17:
+### Existing hosting and diagnosed blocker
 
-- `https://attalambda.com/` returned HTTP 200 through Cloudflare. Its downloaded
-  homepage exactly matches `index.html` at the original commit
-  `46263fec9e8478b079aeadd7e32d8981c09fbbed`, with SHA-256
-  `6cce269782983aa925ce951289dc7c82b9bc6ec90608118efeebcf5878368a0c`.
-  The redesign is therefore not yet published at this domain.
-- Cloudflare handles the domain's nameservers and HTTP edge. This does not
-  establish whether its origin is Cloudflare Pages, Workers, or another host.
-- GitHub Pages, Actions workflows, deployments, repository environments,
-  repository webhooks, commit checks/status entries, and a homepage URL were
-  absent in the inspected site repository. No automatic deployment connection
-  was established by these checks; an external integration remains unverified.
-- Temporary Wrangler 4.134.0 is installed outside the site repository at
-  `/tmp/attalambda-publish-tools/`. `wrangler whoami` reports unauthenticated;
-  `wrangler auth list` reports no profiles. Commands ran from that temporary
-  directory with `--env-file /dev/null`; no dotenv file was inspected.
-- A Cloudflare integration was suggested, but installation and account
-  connection have not been confirmed. No interactive login was started.
+The September 14 session record establishes the actual deployment mechanism:
+Kyle connected `kserrec/attalambda-site` to the Cloudflare Worker
+`attalambda-site` through the Cloudflare dashboard's GitHub integration,
+successfully deployed it, and attached both domain names. Cloudflare Workers
+Builds performs deployment using its own GitHub connection. Neither GitHub
+Actions nor a local Wrangler login is required for that path. Earlier advice
+that a Cloudflare plugin was required was mistaken; no plugin installation is
+needed to restore the existing deployment mechanism.
 
-Next action: obtain the Cloudflare account connection, identify the existing
-project and deployment mechanism for `attalambda.com`, and publish the committed
-static site there under Kyle's existing authorization. Verify that the public
-five pages and stylesheet match the recorded production hashes, record the live
-deployment result, and leave Git clean/pushed. Determine whether GitHub can
-trigger that existing deployment automatically. Do not treat the successful
-source push as evidence of website publication or Cloudflare DNS as proof of
-the origin hosting product.
+The first September 17 live probe returned the original homepage exactly,
+SHA-256 `6cce269782983aa925ce951289dc7c82b9bc6ec90608118efeebcf5878368a0c`.
+Kyle subsequently confirmed that Deployments and View build history contained
+only the original September 14 build. His September 17 15:17:50 screenshot
+showed the banner "This project is disconnected from your Git account."
+The saved repository was `kserrec/attalambda-site`, production branch `main`,
+and included build-watch paths `*`. This is direct evidence of the disconnected
+GitHub integration, rather than a failed site build.
+
+Kyle reconnected the GitHub account and reported that the warning disappeared.
+The original build command copied an explicit file list that predated
+`learn.html`, so the revised command adds that file:
+
+```sh
+mkdir -p public && cp index.html learn.html language.html examples.html get-started.html style.css LICENSE public/
+```
+
+The deployment command configured during the original successful setup is:
+
+```sh
+npx wrangler deploy --assets ./public --name attalambda-site --compatibility-date 2026-09-14
+```
+
+Kyle reported saving the revised build command after being instructed to save
+it in Cloudflare. A newly created local `public/` directory contained exact
+copies of the seven listed source files. These generated copies were preserved
+outside the source repository at
+`/tmp/attalambda-redesign/local-upload-copy-20260917/` after verifying the exact
+file set and byte equality. No upload artifact is included in the source commit.
+
+Temporary Wrangler 4.134.0 remains outside the site repository at
+`/tmp/attalambda-publish-tools/`. Its unauthenticated local state does not block
+Cloudflare-hosted builds. No local interactive login was started, and all
+Wrangler probes used `--env-file /dev/null`; no dotenv file was inspected.
+
+Next action: push this corrected deployment record to `origin/main` to trigger
+a build, monitor the Cloudflare GitHub check, and verify the public pages and
+stylesheet against the recorded production hashes. The verification script is
+`/tmp/attalambda-redesign/check-live-site.py`; reports and downloaded responses
+are under `/tmp/attalambda-redesign/publication-check/`. A baseline probe before
+this push still served the original files on both domains, with 404 responses
+for `learn.html`. Do not treat a successful source push alone as proof of
+website publication.
