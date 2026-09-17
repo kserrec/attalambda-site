@@ -260,15 +260,32 @@ programs, scripts, and browser-profile files are outside the repository under
 generated asset entered the repository. The temporary browser and HTTP server
 were closed after verification.
 
-## Delivery in progress
+## Delivery status
 
 Implemented, tested, and reviewed: yes. All candidate acceptance gates passed.
-Kyle has authorized commit, push, and publication. The verified destination is
-`origin/main`; it is the repository's only branch, has no protection rules,
-and still points to the starting revision. No pull-request workflow is defined.
+Kyle authorized commit, push, and publication on 2026-09-17.
 
-GitHub Pages, Actions workflows, deployments, repository environments, and a
-homepage URL were absent at the publication check. The initial commit also
-records hosting as outside its prior scope. Publication destination is awaiting
-Kyle's answer; this does not block committing and pushing the verified site.
-Final publication evidence will be recorded after the destination is confirmed.
+The implementation commit is
+`7f0f12c4ab3c79fa41b6a5eb326c82cf234cf367` (Teach AttaLambda from lambda
+calculus through runtime values), pushed successfully to `origin/main` in
+`kserrec/attalambda-site`. GitHub's main commit matched it and the local branch
+had zero commits ahead or behind. This subsequent documentation-only commit
+records that delivery result; all six production hashes remain unchanged.
+
+The repository's only branch is main, it has no protection rules, and no
+pull-request workflow is defined. No PR or merge is required for this direct
+push. No temporary verification process remains listening on ports 8765 or
+9229; the session's browser and server were closed.
+
+Publication is authorized but not yet performed. GitHub Pages, Actions
+workflows, deployments, repository environments, and a homepage URL were absent
+at the publication check. The initial commit also records hosting as outside
+its prior scope. Kyle was asked to choose GitHub Pages at
+`https://kserrec.github.io/attalambda-site/` or provide an existing host/domain.
+That destination answer remains pending. No hosting or DNS configuration has
+been created or changed.
+
+Next action: publish the committed static site to Kyle's chosen destination,
+verify that the public five pages and stylesheet match the recorded production
+hashes, record the live URL and deployment result, and leave Git clean/pushed.
+Do not treat the successful source push as evidence of website publication.
